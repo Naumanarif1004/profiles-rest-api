@@ -1,10 +1,12 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser,PermissionsMixin, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin
+from django.contrib.auth.models import BaseUserManager
 
 
 class UserProfileManager(BaseUserManager):
 
-    def create_user(self, email, name, password=None):
+    def create_user(self, email, name, password=None, **extra_fields):
         if not email:
             raise ValueError('User must have an email address')
         email = self.normalize_email(email)
@@ -13,8 +15,8 @@ class UserProfileManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, name, password):
-        user = self.create_user(email, name, password)
+    def create_superuser(self, email, name, password, **extra_fields):
+        user = self.create_user(email, name, password, **extra_fields)
         user.is_superuser = True
         user.is_staff = True
         user.save(using=self._db)
@@ -22,15 +24,15 @@ class UserProfileManager(BaseUserManager):
         return user
 
 
-class UserModel(AbstractBaseUser,PermissionsMixin):
-    email = models.EmailField(max_length=300, unique=True)
-    name = models.CharField(max_length=255)
+class UserProfile(AbstractBaseUser,PermissionsMixin):
+    email = models.EmailField('email address', unique=True, max_length = 255)
+    name = models.CharField('username', max_length=150, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     objects = UserProfileManager()
 
-    USERNAME_FIELD= 'email'
-    REQUIRED_FIELD = 'name'
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['name']
 
     def get_full_name(self):
         return self.name
